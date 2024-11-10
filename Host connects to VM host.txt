@@ -1,0 +1,31 @@
+sudo apt update
+sudo apt install openssh-server
+sudo systemctl status ssh
+sudo systemctl start ssh
+sudo systemctl enable ssh
+sudo ufw status verbose                             # 確認防火牆是否開啟
+sudo ufw allow 22/tcp                               # 若開啟則打開port22
+sudo systemctl status ssh
+su                                                  # 嘗試切換到root,失敗的話需要重置密碼
+sudo passwd root                                    # 修改root密碼
+su                                                  # 再次驗證是否能登入
+ss ntl                                              # 確認是否監聽22端口
+sudo apt install vim
+vim /etc/ssh/sshd_config
+#>>>>>>>
+permitRootLogin prohibit-password                   # Port22那一行也可以打開,可以改為想開啟的端口
+改為PermitRootLogin yes
+#<<<<<<<
+#>>>>>>>
+AI有時候會回答以下操作:
+#Port 22
+#PermitRootLogin prohibit-password
+#PasswordAuthentication yes
+改為
+Port 2
+#permitRootLogin prohibit-password
+PermitRootLogin yes
+PasswordAuthentication yes
+AuthorizedKeysFile .ssh/authorized_keys
+多餘了,且操作不當後面會出現很多問題而且依然連不上
+#<<<<<<<
