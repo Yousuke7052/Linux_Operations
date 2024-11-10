@@ -1,0 +1,37 @@
+# 更換yum源
+### 1.腳本方式
+##### 
+####### [~]# sudo cp -r /etc/yum.repos.d /etc/yum.repos.d.backup
+####### [~]# sudo vim /tmp/update_repos.sh
+####### 輸入以下內容:
+####### #>>>>>>>
+####### #!/bin/bash
+####### 
+####### # 定义阿里云镜像源的前缀
+####### ALIYUN_BASEURL="http://mirrors.aliyun.com/centos/\$releasever"
+####### 
+####### # 遍历 /etc/yum.repos.d/ 目录下的所有 .repo 文件
+####### for file in /etc/yum.repos.d/*.repo; do
+#######     echo "Processing $file..."
+#######     # 使用 sed 命令替换 baseurl 和 mirrorlist
+#######     sudo sed -i "s|^baseurl=http://mirrorlist.centos.org.*|baseurl=${ALIYUN_BASEURL}|g" "$file"
+#######     sudo sed -i "s|^baseurl=http://mirror.centos.org.*|baseurl=${ALIYUN_BASEURL}|g" "$file"
+#######     sudo sed -i "s|^baseurl=http://vault.centos.org.*|baseurl=${ALIYUN_BASEURL}|g" "$file"
+#######     sudo sed -i "s|^mirrorlist=http://mirrorlist.centos.org.*|baseurl=${ALIYUN_BASEURL}|g" "$file"
+#######     sudo sed -i "s|^mirrorlist=.*|baseurl=${ALIYUN_BASEURL}|g" "$file"
+#######     
+#######     # 确保 extras 仓库的路径正确
+#######     sudo sed -i "s|^baseurl=${ALIYUN_BASEURL}$|baseurl=${ALIYUN_BASEURL}/extras/\$basearch/os/|g" "$file"
+#######    
+#######     # 添加调试信息
+#######     echo "After processing $file:"
+#######     cat "$file" | grep -E 'baseurl|mrrorlist'
+####### done
+####### 
+####### echo "All repositories have been updated to use Aliyun mirrors."
+####### #<<<<<<<
+####### sudo chmod +x /tmp/update_repos.sh                       # 給腳本權限  
+####### sudo /tmp/update_repos.sh                                # 執行腳本
+####### sudo yum clean all                                       # 清除緩存
+####### sudo yum makecache                                       # 重建緩存
+####### sudo yum list                                            # 查看所有安裝包,確認是否正確,必要的話vim進去文件查看
