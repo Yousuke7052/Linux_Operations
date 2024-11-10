@@ -1,0 +1,27 @@
+##### Linux
+####### [~]# vim /etc/sysconfig/network-scripts/ifcfg-ens33
+####### [~]# BOOTPROTO="static"
+####### [~]# IPADDR="192.168.247.129"
+####### [~]# NETMASK="255.255.255.0"
+####### [~]# GATEWAY="192.168.247.2"
+####### [~]# DNS1="192.168.247.2"
+####### [~]# systemctl restart network
+
+##### Ubuntu
+####### [~]# sudo cp /etc/netplan/01-network-manager-all.yaml 01-network-manager-all.yaml.bak
+####### [~]# vim 01-network-manager-all.yaml
+####### 改成下面這樣
+####### #>>>>>>>
+####### network:
+#######   version: 2
+#######   renderer: NetworkManager
+#######   ethernets:
+#######     ens33:
+#######       dhcp4: no
+#######       addresses:
+#######         - 192.168.205.200/24
+#######       gateway4: 192.168.205.2
+#######       nameservers:
+#######         addresses: [8.8.8.8, 8.8.4.4]
+####### #<<<<<<<
+####### [~]# sudo netplan apply
