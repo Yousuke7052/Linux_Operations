@@ -1,0 +1,73 @@
+# 1.無法遠程訪問：影響在線調試和應急處理
+# 2.服務器時間異常：程序會報警時間出錯
+# 3.確認是否安裝數據庫組件，版本是否為指定版本
+# 4.數據庫設定自動備份
+
+
+# rpm, yum, dnf
+
+
+# 以下是新機都要檢查一遍的指令：
+cd /etc/yum.repos.d # 後綴.repo的都是倉庫文件
+# Vim 有Base字樣的文件可以進去看看 知道倉庫連接到哪裡的倉庫
+# 文件中：
+# []			yum源唯一ID號
+# name		yum源名稱
+# baseurl		yum源URL
+# enabled		是否激活該yum源：1激活，0禁用
+# gpgcheck	安裝軟件時是否檢查簽名：1激活，0禁用
+# gpqkey		檢查軟件包簽名
+
+
+# 更改系統默認的軟件倉庫
+# 管理本機已安裝的軟件
+# 安裝新程序，升級指定程序
+
+
+# 更改yum源，上網搜索aliyun CentOS 過期源 yum源等字樣
+# 找到連結->找到CentOS連結->找到過期源連結->找到安裝命令
+
+
+dnf list installed		查看當前配置好的程序
+dnf list				      查看當前倉庫所有可配置的程序
+dnf remove            程序名稱	卸載該程序
+dnf search htop 		  搜尋看看當前倉庫有沒有這個htop
+dnf install htop		  安裝，如果不行就gpt，有解
+dnf check
+dnf check-update		  檢查是否有升級
+dnf upgrade			      +程序名就可以指定只升級這個，不加就全升
+
+
+dnf install mariadb
+dnf module install mariadb # 有些檔案上面那行安裝不到
+
+
+# mysql安裝關鍵步驟
+# 1.採用模塊方式安裝
+# 2.啟動mysql，驗證
+# 3.登錄密碼加密規則還原到舊版本
+# 4.允許其他機器訪問
+# 5.修改登錄密碼
+# 6.測試外部登錄
+
+1-1. dnf module install mysql
+
+2-1. Systemctl status mysqld # inactive
+2-2. Systemctl start mysqld
+2-3. Systemctl status mysqld # active
+
+3-1. nano /etc/my.cnf
+3-2. Default_authentication_plugin=mysql_native_password # 文件中最下面加入這一行
+3-3. mysql -u root -p # 密碼是直接敲enter
+
+以下是驗證數據庫
+show databases;
+use mysql;
+show tables;
+update user set host=‘%’where user = ‘root’;
+FLUSH PRIVILEGES;
+ALTER USER ‘root’@‘%’IDENTIFIED BY ‘密碼’; # 這裡修改了登錄密碼
+
+最後就是測試外部登錄
+有帳號密碼跟IP 端口3306，連接失敗就restart mysql等嘗試
+連接成功後見一個表，再回到主機看看是否有該表

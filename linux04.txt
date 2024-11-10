@@ -1,0 +1,44 @@
+lsblk		 列出系統上所有的磁盤
+blkid		除了看分區之外 還會顯示類型
+fdisk -l		查看磁盤分區信息
+fdisk /dev/sda
+		m : for help
+		n  : 創建新的分區
+		w : 寫入，創建後要寫入才算完成
+		p : 打印當前的分區細節
+		d : 刪除分區
+
+mkfs
+
+mkfs.xfs -f /dev/sdd12		(ok)
+
+mkfs.ext4 /dev/sdd1		(ok)
+mkfs.ext4 /dev/sdd/sdd1	(fail)
+
+
+mount /dev/sdb1 /mnt/usbdisk1
+在mnt資料夾創建一個子資料夾名稱usbdisk1然後跟dev分間的磁盤sdb1連結的意思，這就是掛載點
+但掛載後，原來資料夾的內容會看不見，取消掛載後才恢復
+
+windows : .exe 可執行文件
+linux : 沒有擴展名，所有格式的文件，都可以執行
+
+mkdir
+touch
+rm
+mv
+Vim,nano
+tree
+
+find . -name bk			# bk
+find . -name bk*			# 報錯
+find . -name "bk*”			# bk bk.sh等等都會顯示
+find . -name "*bk*"		# /webk23 bk bk.sh等等都會顯示
+
+find . -name “*.sh”
+find . -type f -name “*.sh”
+
+find . -name “*.txt” | xargs grep “aaa” 這邊查的不止是文件名稱，而是會抓裡面內容是否有匹配aaa的內容
+
+Find . -size +10M			# 以文件大小查找，比10M大
+Find . -size -10M			# 以文件大小查找，比10M小

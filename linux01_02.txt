@@ -1,0 +1,32 @@
+對時服務
+
+# 1.無法遠程訪問：影響在線調試和應急處理
+# 2.服務器時間異常：程序會報警時間出錯
+# 3.確認是否安裝數據庫組件，版本是否為指定版本
+# 4.數據庫設定自動備份
+
+
+# chrony
+# ntp
+# 配置文件/etc/chrony.conf
+
+>>>>> 確認是否安裝對時程序 <<<<<
+1-1.yum list installed | grep chrony
+1-2.systemctl status chronyd # inactive(dead)
+1-3.nano /etc/chrony.conf
+1-4.pool 2.centos.pool.ntp.org iburst
+            pool ntp.ntsc.ac.cn iburst
+			pool de.ntp.org.cn iburst
+# 連接點 至少設定兩三個
+1-5.systemctl start chronyd
+1-6.systemctl status chronyd # active
+1-7.chronyc sources # 查看節點有哪些
+
+>>>>> 測試 <<<<<
+	2-1.date
+	2-2.date -s “-2 year” # 時間減兩年
+	2-3.date # 確認錯誤
+	2-4.systemctl restart chronyd
+	2-5.date
+	# 一段時間它就會重新對時
+# 每台服務器都安裝，確保每台服務器時間正確性

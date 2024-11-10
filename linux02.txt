@@ -1,0 +1,69 @@
+# 防火牆
+cd /etc/sysconfig/network-scripts
+ls 		# ifcfg-ens33
+nmcli connection show  # 查看連接，查網卡
+nmcli connection modify ens33  # 按tab會問y or n，enter不行
+nmcli connection modify ens33 ipv4.address 192.168.205.128  # ex:想把IP改成128
+
+# nmtui 圖形化介面
+
+# nmcui與nmtui都可以改ip
+
+ip -s link  # 網路不穩時，可以在這查，看看errors項
+ip -s link ls ens33  # 只查ens33
+watch cat /proc/net/dev  # 監控cat /proc/net/dev
+
+# 常用的網路服務器
+# Apache  # 可以放裡面，Nginx放在外面做負載均衡，兩者一起用
+# Nginx
+# IIS  # windows
+# Php
+# Tomcat  # java
+
+dnf install https
+systemctl status httpd
+systemctl start httpd
+# 訪問失敗 # 因為防火牆，這邊可以跳到下面防火牆標題那邊
+curl http://127.0.0.1
+curl http://192.168.205.128 # 自己ens33 IP
+
+Apache： /var/www/html : 檔案
+Apache： /etc/httpd/logs : 日誌
+
+# 防火牆
+# 	在/usr/lib/firewalld下，關注zones與services
+# 	開防火牆用service較好，port可能被人改了
+# 	firewall-cmd # 配置文件/usr/lib/firewalld/
+firewall-cmd —list-all # 查詢當前區域，可看到開了哪些服務與開了哪些端口
+firewall-cmd —list-all-zones # 查詢所有區域
+# 在/usr/lib/firewalld/services下可以cat http.xml查看該服務的對應端口，會是80
+# 同樣的cat https.xml對應則是443
+# 防火牆可以選擇打開端口或是打開服務
+# 新增service
+firewall-cmd —permanent —zone=public —add-service=http
+firewall-cmd —reload
+firewall-cmd —list-all
+# 移除service
+firewall-cmd —permanent —zone=public —remove-service=http
+firewall-cmd —reload
+firewall-cmd —list-all
+# 新增port
+firewall-cmd —permanent —zone=public —add-port=80/tcp
+firewall-cmd —reload
+firewall-cmd —list-all
+
+firewall -config # 圖形介面
+# 用完要在命令行加載
+firewall-cmd —reload
+
+# 封禁IP
+firewall-cmd —permanent —add-rich-rule=“rule family=‘ipv4’ source address=‘192.168.205.128’ reject"
+
+# 圖形介面
+在Rich Rules
+	Element打勾 
+	server選imp-block
+	類型是echo-reply
+		上面三行都在同一行
+Family選ipv4就行
+firewall-cmd —reload
