@@ -1,0 +1,184 @@
+#
+### 1.無法遠程訪問：影響在線調試和應急處理
+### 2.服務器時間異常：程序會報警時間出錯
+### 3.確認是否安裝數據庫組件，版本是否為指定版本
+### 4.數據庫設定自動備份
+##### 查看內核版本號
+####### [~]# uname -r
+#######
+#######
+#
+# 遠程連線
+### 1.ssh連線
+##### 1)修改ONBOOT
+####### [~]# ping                                                           # ping外網失敗
+####### [~]# cd /etc/NetworkManager/system-connections/                     # 到這邊ls查一下，確認是什麼
+####### [~]# vim /etc/sysconfig/network-scripts/ens160.nmconnection         # ls查到是ens160.nmconnection
+####### [~]# autoconnect=true                                               # 添加這一行，優先級問題，autoconnect-priority=-999這行不動他
+####### [~]# systemctl restart NetworkManager                               # 重啟
+####### [~]# ping                                                           # ping看看外網是否成功
+####### [~]# systemctl status sshd
+####### [~]# vim /etc/ssh/sshd_config
+####### Port 22                                                 # 默認端口是22，可以在這邊改，找Port 22
+####### PermitRootLogin yes                                     # yes表示允許root遠程登入
+####### [~]# systemctl restart sshd                             # 有改動後重啟生效
+####### 這時候從其它地方ssh連回來，若連不上，因為還有防火牆和selinux要設定
+##### 2)修改selinux
+####### [~]# vim /etc/selinux/config
+####### SELINUX=enforcing                                       # 註釋掉
+####### SELINUX=disable
+####### [~]# reboot
+####### vim進入文件後，先確認esc下-> v -> yy -> p                # 複製光標的那一行並貼上
+##### 3)修改
+####### [~]# firewall-cmd --zone=public --add-port=22/tcp --permanent        # 打開tcp的22端口(依據剛剛想打開的端口去做設定)
+####### [~]# firewall-cmd --reload                                           # 重新加載防火牆
+#######
+#######
+####### [~]# systemctl status                                   # +服務名稱，查看狀態
+####### [~]# systemctl start                                    # +服務名稱，啟動服務
+####### [~]# systemctl stop                                     # +服務名稱，停止服務
+####### [~]# systemctl restart                                  # +服務名稱，重啟服務
+####### 
+#######
+#
+# 對時連線
+### 1.多台服務器，時間如何自動同步
+##### 1)
+####### chrony
+####### ntp
+####### 配置文件/etc/chrony.conf
+####### [~]# cat /etc/chrony.conf
+####### >>>>> 確認是否安裝對時程序 <<<<<
+####### [~]# yum list installed | grep chrony
+####### [~]# systemctl status chronyd                           # inactive(dead)，表示沒啟動
+####### [~]# nano /etc/chrony.conf                              # 連接點 至少設定兩三個
+####### pool 2.centos.pool.ntp.org iburst
+####### pool ntp.ntsc.ac.cn iburst
+#######	pool de.ntp.org.cn iburst
+####### [~]# systemctl start chronyd
+####### [~]# systemctl status chronyd                           # active，確認
+####### [~]# chronyc sources                                    # 查看節點有哪些
+####### >>>>> 測試 <<<<<
+####### [~]# date
+####### [~]# date -s “-2 year”                                  # 時間減兩年的測試
+####### [~]# date                                               # 確認錯誤
+####### [~]# systemctl restart chronyd
+####### [~]# date
+####### 一段時間它就會重新對時
+####### 每台服務器都安裝，確保每台服務器時間正確性
+#######
+#######
+#
+# 安裝和升級
+### 1.rpm, yum, dnf
+##### 1)rpm
+####### 下載後，手動安裝和管理單個軟件包，可能會遇到依賴問題
+#######
+##### 2)yum
+####### 在線倉庫，直接安裝的，解決依賴問題
+####### 更新過程中，沒有驗證的情況下會更新軟件包
+####### 使用過多內存，速度慢
+#######
+##### 3)dnf
+####### yum繼任者，更好的性能和豐富的功能，用yum或dnf就好了
+####### 更新過程中，如果包含不相關的依賴，則不會更新
+####### 使用內存少，速度快
+#######
+### 2.以下是新機都要檢查一遍的指令：
+##### 1)後綴.repo的都是倉庫文件
+####### [~]# cd /etc/yum.repos.d 
+##### 2)Vim 有Base字樣的文件可以進去看看 知道倉庫連接到哪裡的倉庫
+####### cat這些文件，內容會有以下：
+####### []			    yum源唯一ID號
+####### name		    yum源名稱
+####### baseurl		    yum源URL
+####### enabled		    是否激活該yum源：1激活，0禁用
+####### gpgcheck	    安裝軟件時是否檢查簽名：1激活，0禁用
+####### gpqkey		    檢查軟件包簽名
+#######
+#######
+####### 用途有許多，包含:
+####### 更改系統默認的軟件倉庫
+####### 管理本機已安裝的軟件
+####### 安裝新程序，升級指定程序
+#######
+####### 
+####### 更改yum源：
+####### 有很多方式，比方說：上網搜索aliyun CentOS、過期源、yum源等字樣
+####### 找到連結->找到CentOS連結->找到過期源連結->找到安裝命令(通常同頁面會有註記一些安裝命令)
+#######
+#######
+##### 3)一些指令
+####### [~]# dnf list installed		      # 查看當前配置好的程序，列出已安裝的軟件包
+####### [~]# dnf list				      # 查看當前倉庫所有可配置的程序，列出所有軟件包
+####### [~]# dnf remove                   # + 程序名稱，卸載該程序
+####### [~]# dnf search htop 		      # 搜尋看看當前倉庫有沒有這個htop
+####### [~]# dnf install htop		      # 安裝，如果不行就gpt，有解
+####### [~]# dnf repolist                 # 顯示系統中可用的dnf軟件庫
+####### [~]# dnf check-update		      # 檢查是否有升級
+####### [~]# dnf upgrade			      # + 程序名就可以指定只升級這個，不加就全升
+####### [~]# dnf makecache                # 創建本地緩存
+#######
+#######
+####### [~]# dnf module list
+####### [~]# dnf module install
+#######
+#######
+####### [~]# dnf install mariadb          # 不會安裝全部，自定義
+####### [~]# dnf module install mariadb   # 有些檔案上面那行安裝不到
+#######
+#######
+#
+# mysql安裝關鍵步驟
+### 1.採用模塊方式安裝
+### 2.啟動mysql，驗證
+### 3.登錄密碼加密規則還原到舊版本
+### 4.允許其他機器訪問
+### 5.修改登錄密碼
+### 6.測試外部登錄
+####### [~]# dnf module install mysql
+#######
+#######
+####### 如果不行(密鑰問題)
+####### [~]# wget https://dev.mysql.com/get/mysql80-community-release-el9-3.noarch.rpm
+####### [~]# rpm -Uvh mysql80-community-release-el9-3.noarch.rpm
+####### [~]# dnf install mysql-community-server
+####### 如果還是不行(密鑰問題)
+####### [~]# dnf clean all
+####### [~]# rpm --import https://repo.mysql.com/RPM-GPG-KEY-mysql-2022
+####### [~]# dnf install mysql-community-server
+####### 如果再不行.......列出已導入的GPG密鑰，查找MySQL的GPG密鑰
+####### [~]# rpm -q gpg-pubkey --qf '%{NAME}-%{VERSION}-%{RELEASE}\t%{SUMMARY}\n'
+####### [~]# rpm -q gpg-pubkey --qf '%{NAME}-%{VERSION}-%{RELEASE}\t%{SUMMARY}\n' | grep mysql
+####### [~]# dnf install mysql-community-server --nogpgcheck        # 安裝MySQL社區版服務器，忽略GPG檢查
+#######
+#######
+####### [~]# systemctl status mysqld        # inactive
+####### [~]# systemctl start mysqld
+####### [~]# systemctl status mysqld        # active
+#######
+####### [~]# nano /etc/my.cnf
+####### Default_authentication_plugin=mysql_native_password     # 文件中最下面加入這一行，身分驗證插件
+####### [~]# mysql -u root -p               # 密碼是直接敲enter
+####### 如果密碼無法登入
+####### [~]# cat /var/log/mysqld.log        # 找 A temporary password 有這些內容的那一行，後面有預設密碼
+####### [~]# mysql -u root -p               # 再次嘗試登入
+####### 設定密碼
+####### mysql> ALTER USER 'root'@'localhost' IDENTIFIED BY 'your_new_password';  # 密碼要大小寫+數字+符號
+####### mysql> FLUSH PRIVILEGES;
+####### mysql> EXIT;
+#######
+#######
+##### 以下是驗證數據庫與設定
+####### mysql> show databases;
+####### mysql> use mysql;
+####### mysql> show tables;
+####### mysql> UPDATE user SET host='%' WHERE user='root';              # 允許root用戶從任何主機訪問
+####### mysql> UPDATE user SET authentication_string = '' WHERE user = 'root' AND host = '%';  # 變成免密碼
+####### mysql> FLUSH PRIVILEGES;                                        # 刷新權限
+####### mysql> ALTER USER 'root'@'%'IDENTIFIED BY '密碼';               # 修改密碼
+#######
+#######
+####### 最後就是測試外部登錄
+####### 有帳號密碼跟IP 端口3306，連接失敗就restart mysql等嘗試
+####### 連接成功後建一個表，再回到主機看看是否有該表

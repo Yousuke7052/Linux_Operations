@@ -1,0 +1,79 @@
+crond：Linux下用來週期的執行某種任務的一個守護進程
+
+# 實現mysql自動化備份
+### 路徑在root下做的範例
+##### 起手式，確認是否啟動，查看狀態
+####### [~]# systemctl status crond
+##### 查看文件
+####### [~]# vim /etc/crontab
+##### 建立腳本timer.sh
+####### [~]# touch timer.sh
+####### [~]# vim timer.sh
+####### #!/bin/bash
+####### echo $(date +%Y%m%d_%H%M%S_%N) >>/root/newLine.txt
+####### echo "haha" >>/root/newLine.txt
+##### 創建備份存放文件夾
+####### [~]# touch /root/newLine.txt
+####### [~]# cat /root/newLine.txt              # 確認無內容
+####### [~]# chmod 777 timer.sh                 # 打開權限，這邊777是全開，非必要
+####### [~]# ./timer.sh                         # 執行
+####### [~]# cat /root/newLine.txt              # 確認timer.sh裡面內容會出現在這
+####### 
+#######
+##### 另一個案例，再進入vim /etc/crontab
+##### 建立備份腳本bk.sh
+####### [~]# vim /etc/crontab
+####### [~]# touch bk.sh
+####### [~]# chmod 777 bk.sh
+####### [~]# vim bk.sh
+####### #!/bin/bash
+####### echo "bk start"
+####### bkfilename="dir_$(date +%Y%m%d_%H%M%S)"
+####### echo $bkfilename
+####### cp -a /root/working/dir /root/bk/$bkfilename
+####### tar -cPf /root/bk/$bkfilename.tar /root/bk/$bkfilename
+####### echo "bk oK"
+#######
+#######
+####### [~]# mkdir /root/working/dir                 # 創建要被備分的文件夾
+####### [~]# mkdir /root/bk                          # 創建bk文件夾，備份後放到bk文件夾
+####### [~]# ./bk.sh
+#######
+#######
+####### 35  3  *  *  *  root     /root/timer.sh		             -> 3點35執行一次
+####### 0  8-17  *  *  *  root     /root/timer.sh                -> 8~17點0分都執行一次
+####### 3  8,12,15  *  *  *  root     /root/timer.sh             -> 8點12點15點3分都執行一次
+####### */10  *  *  *  *  root     /root/timer.sh                -> 每10分執行一次
+####### *  */2  *  *  *  root     /root/timer.sh                 -> 每2小時執行一次
+#######
+####### 但通常整點很多任務都會發生 可能調58分或3分這樣
+#######
+#######
+### mysql備份
+##### 確認狀態
+####### [~]# systemctl status mysqld
+##### 建立存放備份的文件夾
+####### [~]# mkdir sqlbk
+##### 指令
+####### [~]# mysqldump -u root -h 127.0.0.1 -p密碼直接輸入不加空格 testdb > /root/sqlbk/dbbk.sql
+####### cat /root/sqlbk/dbbk.sql確認改動的表資料都有跟著備份進去 所以查看檢查
+####### 然後把這一段放到剛剛的要執行的sh檔案裡 可以改生成的檔案名 
+####### 同時whereis mysqldump看他的位置 文件中要改
+####### 再把sh檔案在/etc/crontab中
+##### 建立備份腳本
+####### [~]# touch bksql.sh
+####### [~]# vim bksql.sh
+####### #!/bin/bash
+####### echo "bk start"
+####### bkfilename="dir_$(date +%Y%m%d_%H%M%S)"
+####### echo $bkfilename
+####### cp -a /root/working/dir /root/bk/$bkfilename
+####### tar -cPf /root/bk/$bkfilename.tar /root/bk/$bkfilename
+####### echo "bk oK"
+####### /usr/bin/mysqldump -u root -h 127.0.0.1 -p密碼直接輸入不加空格 testdb > /root/sqlbk/db_$(date +%Y%m%d_%H%M%S).sql
+####### echo "bksql ok"
+#######
+#######
+####### [~]# ./bksql.sh                                 # 確認無異常
+####### [~]# vim /etc/crontab                           # 設定任務
+####### 檢查備份的數據庫有沒有異常即可

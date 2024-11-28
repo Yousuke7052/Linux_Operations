@@ -47,7 +47,7 @@
 ####### chrony
 ####### ntp
 ####### 配置文件/etc/chrony.conf
-####### [~]# cd /etc/chrony.conf
+####### [~]# cat /etc/chrony.conf
 ####### >>>>> 確認是否安裝對時程序 <<<<<
 ####### [~]# yum list installed | grep chrony
 ####### [~]# systemctl status chronyd                           # inactive(dead)，表示沒啟動
@@ -89,12 +89,12 @@
 ####### [~]# cd /etc/yum.repos.d 
 ##### 2)Vim 有Base字樣的文件可以進去看看 知道倉庫連接到哪裡的倉庫
 ####### cat這些文件，內容會有以下：
-####### []			yum源唯一ID號
+####### []			    yum源唯一ID號
 ####### name		    yum源名稱
-####### baseurl		yum源URL
-####### enabled		是否激活該yum源：1激活，0禁用
+####### baseurl		    yum源URL
+####### enabled		    是否激活該yum源：1激活，0禁用
 ####### gpgcheck	    安裝軟件時是否檢查簽名：1激活，0禁用
-####### gpqkey		檢查軟件包簽名
+####### gpqkey		    檢查軟件包簽名
 #######
 #######
 ####### 用途有許多，包含:
@@ -138,22 +138,32 @@
 ### 6.測試外部登錄
 ####### [~]# dnf module install mysql
 #######
-####### [~]# Systemctl status mysqld        # inactive
-####### [~]# Systemctl start mysqld
-####### [~]# Systemctl status mysqld        # active
+#######
+####### [~]# systemctl status mysqld        # inactive
+####### [~]# systemctl start mysqld
+####### [~]# systemctl status mysqld        # active
+#######
 #######
 ####### [~]# nano /etc/my.cnf
-####### Default_authentication_plugin=mysql_native_password     # 文件中最下面加入這一行
+####### Default_authentication_plugin=mysql_native_password     # 文件中最下面加入這一行，身分驗證插件
 ####### [~]# mysql -u root -p               # 密碼是直接敲enter
+####### 如果密碼無法登入
+####### [~]# cat /var/log/mysqld.log        # 找 A temporary password 有這些內容的那一行，後面有預設密碼
+####### [~]# mysql -u root -p               # 再次嘗試登入
+####### 設定密碼
+####### mysql> ALTER USER 'root'@'localhost' IDENTIFIED BY 'your_new_password';  # 密碼要大小寫+數字+符號
+####### mysql> FLUSH PRIVILEGES;
+####### mysql> EXIT;
 #######
 #######
-##### 以下是驗證數據庫
-####### [~]# show databases;
-####### [~]# use mysql;
-####### [~]# show tables;
-####### [~]# update user set host=‘%’where user = ‘root’;
-####### [~]# FLUSH PRIVILEGES;
-####### [~]# ALTER USER ‘root’@‘%’IDENTIFIED BY ‘密碼’; # 這裡修改了登錄密碼
+##### 以下是驗證數據庫與設定
+####### mysql> show databases;
+####### mysql> use mysql;
+####### mysql> show tables;
+####### mysql> UPDATE user SET host='%' WHERE user='root';              # 允許root用戶從任何主機訪問
+####### mysql> UPDATE user SET authentication_string = '' WHERE user = 'root' AND host = '%';  # 變成免密碼
+####### mysql> FLUSH PRIVILEGES;                                        # 刷新權限
+####### mysql> ALTER USER 'root'@'%'IDENTIFIED BY '密碼';               # 修改密碼
 #######
 #######
 ####### 最後就是測試外部登錄
